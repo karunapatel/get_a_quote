@@ -1,0 +1,5 @@
+services:
+  get_a_quote.route_subscriber:
+    class: Drupal\get_a_quote\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }

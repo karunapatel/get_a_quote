@@ -1,0 +1,27 @@
+<?php
+
+use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+/**
+* Implements hook_mail().
+*/
+function get_a_quote_mail($key, &$message, $params) {
+ $options = array(
+   'langcode' => $message['langcode'],
+ );
+ switch ($key) {
+   case 'send_quote':
+     $message['from'] = \Drupal::config('system.site')->get('mail');
+     $message['subject'] = t('Quote Details: @title', array('@title' => $params['subject']), $options);
+     $message['body'][] = $params['message'];
+     break;
+ }
+}
+
+function get_a_quote_form_commerce_checkout_flow_multistep_default_alter(&$form, FormStateInterface $form_state) {//, RouteMatchInterface $route_match) {
+    //$order = $route_match->getParameter('commerce_order');
+    //$requested_step_id = $route_match->getParameter('step');
+    //echo'<pre>'; print_r($order); exit;
+}
