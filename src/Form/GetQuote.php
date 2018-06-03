@@ -26,7 +26,7 @@ class GetQuote extends FormBase {
 	  '#type' => 'fieldset',
 	];
 	
-	$form['quotefieldset']['your_name'] = [  
+	$form['quotefieldset']['name'] = [  
       '#type' => 'textfield',  
       '#title' => $this->t('Your Name'),
 	  '#required' => TRUE,
@@ -84,6 +84,20 @@ class GetQuote extends FormBase {
       drupal_set_message($key . ': ' . $value);
     }
 	
+	// Inserting record into database
+	$conn = Database::getConnection();
+    $conn->insert('get_a_quote_form')->fields(
+	  array(
+	    //'quoteid' => '',
+	    'name' => $form_state->getValue('name'),
+		'email' => $form_state->getValue('email'),
+		'number' => $form_state->getValue('number'),
+		'quote_subject' => $form_state->getValue('quote_subject'),
+		'quote_description' => $form_state->getValue('quote_description'),
+	  )
+	)->execute();
+	
+	// sending mail
 	$mailManager = \Drupal::service('plugin.manager.mail');
 	$module = 'get_a_quote';
 	$key = 'send_quote';
