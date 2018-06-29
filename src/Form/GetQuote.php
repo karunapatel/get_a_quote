@@ -4,6 +4,7 @@ namespace Drupal\get_a_quote\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Mail\MailFormatHelper;
 
 /**
  * Provides the GetQuote form.
@@ -69,52 +70,59 @@ class GetQuote extends FormBase {
   /**
    * {@inheritdoc}
    */
-    public function validateForm(array &$form, FormStateInterface $form_state) {
-      if (strlen($form_state->getValue('number')) < 10) {
-        $form_state->setErrorByName('number', $this->t('Mobile number is too short.'));
-      }
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    if (strlen($form_state->getValue('number')) < 10) {
+      $form_state->setErrorByName('number', $this->t('Mobile number is too short.'));
     }
+  }
   
   /**  
    * {@inheritdoc}  
    */  
-  public function submitForm(array &$form, FormStateInterface $form_state) {  
-//  parent::submitForm($form, $form_state);  
-    foreach ($form_state->getValues() as $key => $value) {
-      drupal_set_message($key . ': ' . $value);
-    }
-	
-	// Inserting record into database
-	$conn = Database::getConnection();
-    $conn->insert('get_a_quote_form')->fields(
-	  array(
-	    //'quoteid' => '',
-	    'name' => $form_state->getValue('name'),
-		'email' => $form_state->getValue('email'),
-		'number' => $form_state->getValue('number'),
-		'quote_subject' => $form_state->getValue('quote_subject'),
-		'quote_description' => $form_state->getValue('quote_description'),
-	  )
-	)->execute();
-	
+  public function submitForm(array &$form, FormStateInterface $form_state) {   
+  
 	// sending mail
 	$mailManager = \Drupal::service('plugin.manager.mail');
 	$module = 'get_a_quote';
 	$key = 'send_quote';
-	$to = \Drupal::currentUser()->getEmail();
-	$params['message'] = $form_state->getValue('quote_description');
-	$params['subject'] = $form_state->getValue('quote_subject');
+	$to = $form_state->getValue('email');
+  $message = '<p>Hi ' . ucfirst($form_state->getValue('name')). '</p>';
+  $message .= '<p>' . t('Your have recently requested a Quote for the product in your cart.') . '</p>';
+  $message .= '<p>' . t('Summary : ') . '</p>';
+  $message .= '<p>' . t('Your Name: @yourname', array('@yourname' => $form_state->getValue('name'))) . '</p>';
+  $message .= '<p>' . t('Email: @email', array('@email' => $form_state->getValue('email'))) . '</p>';
+  $message .= '<p>' . t('Contact Number: @contnumber', array('@contnumber' => $form_state->getValue('number'))) . '</p>';
+  $message .= '<p>' . t('Message: @message', array('@message' => $form_state->getValue('quote_description'))) . '</p>';
+  $message .= '<p>' . t('Thank you for your Query, We will contact you soon') . '</p>'; 
+
+	$params['message'] = MailFormatHelper::htmlToText($message);
+	$params['subject'] = $form_state->getValue('quote_subject') .' | ' . \Drupal::config('system.site')->get('name');
 	$langcode = \Drupal::currentUser()->getPreferredLangcode();
+  $from = \Drupal::config('system.site')->get('mail');
 	$send = true;
-	$result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+	$result = $mailManager->mail($module, $key, $to, $langcode, $params, $from, $send);
 	if ($result['result'] !== true) {
 	  drupal_set_message(t('There was a problem sending your message and it was not sent.'), 'error');
 	}
 	else {
 	  drupal_set_message(t('Your message has been sent.'));
 	}
-    //$this->config('quote.settings')  
-      //->set('enable_quote_for_commerce_product', $form_state->getValue('enable_quote_for_commerce_product'))  
-      //->save();  
+  
+  global $base_url;
+  $key2 = 'receive_quote';
+  $to2 = \Drupal::config('system.site')->get('mail');
+  $message2 = '<p>Hi ' . \Drupal::config('system.site')->get('mail') . '</p>';
+  $message2 .= '<p>' . t('A new Quote Request has been received from '.$form_state->getValue('email')) . '</p>';
+  $message2 .= '<p>' . t('Requester Summary : ') . '</p>';
+  $message2 .= '<p>' . t('Name: @yourname', array('@yourname' => $form_state->getValue('name'))) . '</p>';
+  $message2 .= '<p>' . t('Email: @email', array('@email' => $form_state->getValue('email'))) . '</p>';
+  $message2 .= '<p>' . t('Contact Number: @contnumber', array('@contnumber' => $form_state->getValue('number'))) . '</p>';
+  $message2 .= '<p>' . t('Subject: @subject', array('@subject' => $form_state->getValue('quote_subject'))) . '</p>';
+  $message2 .= '<p>' . t('Message: @message', array('@message' => $form_state->getValue('quote_description'))) . '</p>';
+  $message2 .= '<p>' . t('For product information, visit '.$base_url.'/admin/commerce/orders/carts') . '</p>'; 
+
+	$params['message2'] = MailFormatHelper::htmlToText($message2);
+  $result2 = $mailManager->mail($module, $key2, $to2, $langcode, $params, $from, $send);  
+
   }  
 }

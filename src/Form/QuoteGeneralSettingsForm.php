@@ -15,7 +15,7 @@ class QuoteGeneralSettingsForm extends ConfigFormBase {
    */  
   protected function getEditableConfigNames() {  
     return [  
-      'quote.settings',  
+      'get_a_quote.settings',  
     ];  
   }  
 
@@ -30,13 +30,13 @@ class QuoteGeneralSettingsForm extends ConfigFormBase {
    * {@inheritdoc}  
    */  
   public function buildForm(array $form, FormStateInterface $form_state) {  
-    $config = $this->config('quote.settings');  
+    $config = $this->config('get_a_quote.settings');  
 
-    $form['enable_quote_for_commerce_product'] = [  
+    $form['enable_quote'] = [  
       '#type' => 'checkbox',  
-      '#title' => $this->t('Enable Get a Quote for all commerce products'),  
-      '#description' => $this->t('Gett a Quote button will be displayed on commerce checkout page.'),  
-      '#default_value' => $config->get('enable_quote_for_commerce_product'),  
+      '#title' => $this->t('Enable Get a Quote for commerce products'),  
+      '#description' => $this->t('Get a Quote button will be displayed on commerce Review page.'),  
+      '#default_value' => $config->get('enable_quote'),  
     ];  
 
     return parent::buildForm($form, $form_state);  
@@ -48,8 +48,8 @@ class QuoteGeneralSettingsForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {  
     parent::submitForm($form, $form_state);  
 
-    $this->config('quote.settings')  
-      ->set('enable_quote_for_commerce_product', $form_state->getValue('enable_quote_for_commerce_product'))  
+    $this->config('get_a_quote.settings')  
+      ->set('enable_quote', $form_state->getValue('enable_quote'))  
       ->save();  
   }  
 }

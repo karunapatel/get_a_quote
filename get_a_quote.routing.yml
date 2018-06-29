@@ -15,8 +15,3 @@ get_quote.form:
    _form: '\Drupal\get_a_quote\Form\GetQuote'
  requirements:
    _permission: 'access content'
-
-quote_on_checkout.form:
-  path: '/checkou'
-  defaults:
-    _controller: '\Drupal\get_a_quote\Controller\QuoteController::quotelink'
